@@ -1,24 +1,44 @@
+# Stock Peaks Checker
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies and run the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## JSONBin persistence
+
+The project ships with a `/api/jsonbin` route that persists arbitrary JSON payloads to [jsonbin.io](https://jsonbin.io). It exposes two operations:
+
+- `POST /api/jsonbin` – create a new bin or update an existing one when a `binId` is provided in the body. The request body must contain a `payload` field with the data you want to store. Optional `binName` and `collectionId` properties forward to JSONBin headers.
+- `GET /api/jsonbin?binId=<id>` – fetch the latest version of a bin previously created with JSONBin.
+
+### Configuration
+
+1. Copy `.env.example` to `.env.local` and fill in your `JSONBIN_API_KEY` from your JSONBin dashboard.
+2. Restart the dev server so Next.js picks up the new environment variable.
+
+### Example request
+
+```bash
+curl -X POST http://localhost:3000/api/jsonbin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "payload": { "source": "stocks", "data": [1, 2, 3] },
+    "binName": "latest-peaks"
+  }'
+```
+
+The response includes the bin metadata and the stored record. Save the returned `metadata.id` to update or read the bin later.
 
 ## Learn More
 
@@ -33,4 +53,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
