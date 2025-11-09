@@ -28,20 +28,31 @@ export async function GET(
   }
 
   const body = await apiResponse.json();
-  const previousPrice = await readJsonBin<{ previousPrice: number }>(
-    process.env.JSONBIN_ID || ""
-  );
+  const currentPrice = parseFloat(body.price);
+
+  if (isNaN(currentPrice)) {
+    return new Response("Invalid price data received", { status: 502 });
+  }
+
+  const previousPriceStorage = await readJsonBin<{
+    previousPrice: Record<string, number>;
+  }>(process.env.JSONBIN_ID || "");
+  const previousPrice =
+    previousPriceStorage?.record?.previousPrice?.[symbol] || 0;
   await updateJsonBin(process.env.JSONBIN_ID || "", {
-    previousPrice: body.price,
+    previousPrice: {
+      ...previousPriceStorage?.record?.previousPrice,
+      [symbol]: currentPrice,
+    },
   });
 
   return new Response(
     JSON.stringify({
-      price: body.price,
-      previousPrice: previousPrice?.record?.previousPrice || null,
+      price: currentPrice,
+      previousPrice: previousPrice,
       alert: getPriceAlert(
-        parseFloat(body.price),
-        previousPrice?.record?.previousPrice ?? 0,
+        currentPrice,
+        previousPrice,
         parseInt(process.env.PRICE_CHANGE_THRESHOLD ?? "5")
       ),
     }),
